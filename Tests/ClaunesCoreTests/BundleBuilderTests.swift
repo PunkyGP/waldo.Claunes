@@ -123,8 +123,15 @@ final class BundleBuilderTests: XCTestCase {
         for file in [main, helper, c.appendingPathComponent("Resources/app.asar.unpacked/native.node")] {
             let info = codesign(["-dv", file.path]).output
             XCTAssertTrue(info.contains("Signature=adhoc"), "\(file.lastPathComponent) must carry our (test: ad-hoc) signature:\n\(info)")
-            XCTAssertTrue(info.contains("runtime"), "\(file.lastPathComponent) needs the hardened runtime:\n\(info)")
+            // Ad-hoc + hardened runtime = library validation without a Team ID: dyld refuses Electron Framework (issue #6).
+            XCTAssertFalse(info.contains("runtime"), "\(file.lastPathComponent): ad-hoc must not carry the hardened runtime:\n\(info)")
         }
+    }
+
+    /// Hardened runtime only with a real identity (Developer ID: same Team ID everywhere, library validation passes).
+    func testHardenedRuntimeOnlyWithARealIdentity() {
+        XCTAssertEqual(CodeSigner(identity: "-").runtimeArguments, [], "ad-hoc: no Team ID, so no library validation")
+        XCTAssertEqual(CodeSigner(identity: "2222222222222222222222222222222222222222").runtimeArguments, ["--options", "runtime"])
     }
 
     func testPreferredIdentityIsTheDeveloperIDApplicationCertificate() {
