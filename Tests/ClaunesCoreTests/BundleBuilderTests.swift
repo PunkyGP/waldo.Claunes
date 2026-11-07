@@ -241,7 +241,7 @@ final class BundleBuilderTests: XCTestCase {
         let before = try XCTUnwrap(BundleBuilder.stamp(of: app))
         // A process executing from inside the bundle, like the launcher or Claude itself.
         let resident = app.appendingPathComponent("Contents/MacOS/resident")
-        try fm.copyItem(at: URL(fileURLWithPath: "/bin/sleep"), to: resident)
+        try TestResident.make(at: resident)
         let p = Process(); p.executableURL = resident; p.arguments = ["30"]
         try p.run()
         defer { if p.isRunning { p.terminate(); p.waitUntilExit() } }
@@ -278,7 +278,7 @@ final class BundleBuilderTests: XCTestCase {
         let claune = try manager.create(name: "Test-Busy")
         let app = paths.appBundle(for: claune)
         let resident = app.appendingPathComponent("Contents/MacOS/resident")
-        try FileManager.default.copyItem(at: URL(fileURLWithPath: "/bin/sleep"), to: resident)
+        try TestResident.make(at: resident)
         let p = Process(); p.executableURL = resident; p.arguments = ["30"]
         try p.run()
         defer { if p.isRunning { p.terminate(); p.waitUntilExit() } }
