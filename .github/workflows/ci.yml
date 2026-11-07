@@ -48,6 +48,9 @@ jobs:
           test -x "$APP/Contents/MacOS/claune-launcher"
           test -s "$APP/Contents/Resources/AppIcon.icns"
           codesign --verify --deep --strict "$APP"
+          for bin in "$APP"/Contents/MacOS/*; do   # universal: Apple Silicon + Intel
+            A=" $(lipo -archs "$bin") "; [[ "$A" == *" arm64 "* && "$A" == *" x86_64 "* ]] || { echo "::error::$bin is not universal:$A"; exit 1; }
+          done
 
       - name: Package
         run: ditto -c -k --keepParent build/waldo.Claunes.app "build/waldo.Claunes-$(cat VERSION)-${GITHUB_SHA::7}-unsigned.zip"
